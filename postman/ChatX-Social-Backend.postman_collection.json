@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "ChatX Social Backend",
+    "_postman_id": "9e0192fe-9d38-4d7d-8be7-7d1904ce7e2a",
+    "description": "MVP API collection for ChatX Spring Boot backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "['accessTokenA','accessTokenB'].forEach((k) => {",
+          "  const t = pm.collectionVariables.get(k);",
+          "  if (typeof t === 'string') {",
+          "    pm.collectionVariables.set(k, t.replace(/^\\\"|\\\"$/g, '').trim());",
+          "  }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8090" },
+    { "key": "accessTokenA", "value": "" },
+    { "key": "accessTokenB", "value": "" },
+    { "key": "userIdA", "value": "" },
+    { "key": "userIdB", "value": "" },
+    { "key": "chatId", "value": "room1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/actuator/health"
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessTokenA', json.accessToken || '');",
+                  "pm.collectionVariables.set('userIdA', String(json.userId || ''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"a@test.com\",\n  \"password\": \"password123\",\n  \"displayName\": \"User A\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/signup"
+          }
+        },
+        {
+          "name": "Signup User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessTokenB', json.accessToken || '');",
+                  "pm.collectionVariables.set('userIdB', String(json.userId || ''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"b@test.com\",\n  \"password\": \"password123\",\n  \"displayName\": \"User B\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/signup"
+          }
+        },
+        {
+          "name": "Login User A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessTokenA', json.accessToken || '');",
+                  "pm.collectionVariables.set('userIdA', String(json.userId || ''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"a@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessTokenB', json.accessToken || '');",
+                  "pm.collectionVariables.set('userIdB', String(json.userId || ''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"b@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users & Social",
+      "item": [
+        {
+          "name": "Get User B Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userIdB}}"
+          }
+        },
+        {
+          "name": "Update User A Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"User A Updated\",\n  \"bio\": \"Building ChatX\"\n}"
+            },
+            "url": "{{baseUrl}}/api/users/{{userIdA}}"
+          }
+        },
+        {
+          "name": "User A Follows User B",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userIdB}}/follow"
+          }
+        },
+        {
+          "name": "Get User B Social Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userIdB}}/social"
+          }
+        },
+        {
+          "name": "User A Unfollows User B",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userIdB}}/follow"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts & Feed",
+      "item": [
+        {
+          "name": "Create Post (User A)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"hello from postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/posts"
+          }
+        },
+        {
+          "name": "Get Feed (User A)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/feed?page=0&size=20"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Send Chat Message (User A)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"hi from postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/chats/{{chatId}}/messages"
+          }
+        },
+        {
+          "name": "Get Chat Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessTokenA}}" }
+            ],
+            "url": "{{baseUrl}}/api/chats/{{chatId}}/messages?size=50"
+          }
+        }
+      ]
+    }
+  ]
+}

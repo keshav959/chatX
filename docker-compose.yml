@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: chatx-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chatx
+      MYSQL_USER: chatx
+      MYSQL_PASSWORD: chatx
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongo:
+    image: mongo:7
+    container_name: chatx-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: chatx
+      MONGO_INITDB_ROOT_PASSWORD: chatx
+      MONGO_INITDB_DATABASE: chatx
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mysql_data:
+  mongo_data:

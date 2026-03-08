@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: social-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/chatx?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USER:chatx}
+    password: ${DB_PASSWORD:chatx}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://chatx:chatx@127.0.0.1:27017/chatx?authSource=admin}
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: change-this-to-a-long-random-secret-key-for-production
+    access-token-minutes: 60
+    refresh-token-days: 7

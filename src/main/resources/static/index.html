@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatX Social</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="grid-overlay"></div>
+
+  <header class="topbar">
+    <div>
+      <h1>ChatX Social</h1>
+      <p>Profiles, feed, follows, and realtime-style chat APIs in one console.</p>
+    </div>
+    <div class="session-box">
+      <div id="sessionLabel">No active session</div>
+      <button id="logoutBtn" class="ghost" disabled>Logout</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel auth-panel">
+      <h2>Auth</h2>
+      <div class="stack">
+        <h3>Signup</h3>
+        <input id="signupEmail" type="email" placeholder="email" value="a@test.com" />
+        <input id="signupPassword" type="password" placeholder="password" value="password123" />
+        <input id="signupName" type="text" placeholder="display name" value="User A" />
+        <button id="signupBtn">Signup</button>
+      </div>
+
+      <div class="stack">
+        <h3>Login</h3>
+        <input id="loginEmail" type="email" placeholder="email" value="a@test.com" />
+        <input id="loginPassword" type="password" placeholder="password" value="password123" />
+        <button id="loginBtn">Login</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Profile & Social</h2>
+      <div class="stack">
+        <h3>Get Profile</h3>
+        <input id="profileUserId" type="number" placeholder="user id" />
+        <button id="getProfileBtn">Fetch Profile</button>
+      </div>
+
+      <div class="stack">
+        <h3>Update My Profile</h3>
+        <input id="updateName" type="text" placeholder="new display name" />
+        <input id="updateBio" type="text" placeholder="bio" />
+        <button id="updateProfileBtn">Update Profile</button>
+      </div>
+
+      <div class="stack split">
+        <div>
+          <h3>Follow / Unfollow</h3>
+          <input id="targetUserId" type="number" placeholder="target user id" />
+          <div class="row">
+            <button id="followBtn">Follow</button>
+            <button id="unfollowBtn" class="ghost">Unfollow</button>
+          </div>
+        </div>
+        <div>
+          <h3>Social Stats</h3>
+          <input id="socialUserId" type="number" placeholder="user id" />
+          <button id="socialStatsBtn">Get Stats</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Posts & Feed</h2>
+      <div class="stack">
+        <h3>Create Post</h3>
+        <textarea id="postContent" placeholder="What are you building?"></textarea>
+        <button id="createPostBtn">Publish</button>
+      </div>
+
+      <div class="stack">
+        <h3>Feed</h3>
+        <div class="row">
+          <input id="feedPage" type="number" value="0" min="0" />
+          <input id="feedSize" type="number" value="20" min="1" max="100" />
+          <button id="loadFeedBtn">Load Feed</button>
+        </div>
+        <div id="feedList" class="list"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Chat</h2>
+      <div class="stack">
+        <div class="row">
+          <input id="chatId" type="text" placeholder="chat id" value="room1" />
+          <input id="chatSize" type="number" value="20" min="1" max="100" />
+        </div>
+        <textarea id="chatMessage" placeholder="type a message"></textarea>
+        <div class="row">
+          <button id="sendChatBtn">Send Message</button>
+          <button id="loadChatBtn" class="ghost">Load Messages</button>
+        </div>
+        <div id="chatList" class="list"></div>
+      </div>
+    </section>
+
+    <section class="panel wide">
+      <h2>Response Console</h2>
+      <pre id="console"></pre>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

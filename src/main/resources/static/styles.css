@@ -1,0 +1,237 @@
+:root {
+  --bg: #f6f4ee;
+  --ink: #132a31;
+  --panel: rgba(255, 255, 255, 0.84);
+  --line: rgba(15, 46, 56, 0.16);
+  --brand: #0f766e;
+  --accent: #ea580c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 12%, #fff4de 0%, #f6f4ee 35%, #e8f3f2 100%);
+  font-family: "Space Grotesk", sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.bg-orb {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(55px);
+  opacity: 0.26;
+  pointer-events: none;
+}
+
+.orb-a {
+  width: 320px;
+  height: 320px;
+  background: #ea580c;
+  top: -85px;
+  left: -70px;
+}
+
+.orb-b {
+  width: 380px;
+  height: 380px;
+  background: #0f766e;
+  bottom: -140px;
+  right: -120px;
+}
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image: linear-gradient(to right, rgba(15, 46, 56, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 46, 56, 0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.topbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 22px 10px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(1.9rem, 2.4vw, 3rem);
+  line-height: 1;
+}
+
+.topbar p {
+  margin: 8px 0 0;
+  color: #36535c;
+}
+
+.session-box {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 14px 22px 28px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  padding: 16px;
+  box-shadow: 0 20px 35px rgba(19, 42, 49, 0.08);
+  animation: rise 420ms ease-out both;
+}
+
+.panel:nth-child(2) { animation-delay: 40ms; }
+.panel:nth-child(3) { animation-delay: 80ms; }
+.panel:nth-child(4) { animation-delay: 120ms; }
+.panel:nth-child(5) { animation-delay: 160ms; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel.wide {
+  grid-column: 1 / -1;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.stack {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.split {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+input,
+textarea,
+button,
+pre {
+  font-family: inherit;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: #fff;
+  color: #102429;
+}
+
+textarea {
+  min-height: 74px;
+  resize: vertical;
+}
+
+button {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 13px;
+  background: linear-gradient(135deg, var(--brand), #14695b);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.03);
+}
+
+button.ghost {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.list {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  min-height: 78px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.list-item {
+  border-left: 3px solid var(--accent);
+  background: #fff7ef;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.93rem;
+}
+
+#console {
+  background: #0e1f24;
+  color: #e9f5f3;
+  border: 1px solid #213b43;
+  border-radius: 12px;
+  margin: 0;
+  padding: 12px;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 930px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
