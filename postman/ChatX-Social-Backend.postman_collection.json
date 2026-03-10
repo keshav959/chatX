@@ -11,11 +11,68 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "['accessTokenA','accessTokenB'].forEach((k) => {",
-          "  const t = pm.collectionVariables.get(k);",
-          "  if (typeof t === 'string') {",
-          "    pm.collectionVariables.set(k, t.replace(/^\\\"|\\\"$/g, '').trim());",
+          "['accessTokenA','accessTokenB','refreshTokenA','refreshTokenB'].forEach((k) => {",
+          "  const cv = pm.collectionVariables.get(k);",
+          "  const ev = pm.environment.get(k);",
+          "  if (typeof cv === 'string') {",
+          "    pm.collectionVariables.set(k, cv.replace(/^\\\"|\\\"$/g, '').trim());",
           "  }",
+          "  if (typeof ev === 'string') {",
+          "    pm.environment.set(k, ev.replace(/^\\\"|\\\"$/g, '').trim());",
+          "  }",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.response.code !== 403) {",
+          "  return;",
+          "}",
+          "",
+          "const requestUrl = pm.request.url.toString();",
+          "if (requestUrl.includes('/api/auth/')) {",
+          "  return;",
+          "}",
+          "",
+          "const authHeader = pm.request.headers.get('Authorization') || '';",
+          "const useB = authHeader.includes('accessTokenB');",
+          "const suffix = useB ? 'B' : 'A';",
+          "const refreshKey = `refreshToken${suffix}`;",
+          "const accessKey = `accessToken${suffix}`;",
+          "const refreshToken = pm.environment.get(refreshKey) || pm.collectionVariables.get(refreshKey);",
+          "",
+          "if (!refreshToken) {",
+          "  console.log('403 received and no refresh token available. Login again.');",
+          "  return;",
+          "}",
+          "",
+          "pm.sendRequest({",
+          "  url: `${pm.collectionVariables.get('baseUrl') || pm.environment.get('baseUrl')}/api/auth/refresh`,",
+          "  method: 'POST',",
+          "  header: { 'Content-Type': 'application/json' },",
+          "  body: {",
+          "    mode: 'raw',",
+          "    raw: JSON.stringify({ refreshToken })",
+          "  }",
+          "}, function (err, res) {",
+          "  if (err || !res || res.code !== 200) {",
+          "    console.log('Token refresh failed. Please run Login again.');",
+          "    return;",
+          "  }",
+          "  const json = res.json();",
+          "  if (json.accessToken) {",
+          "    pm.collectionVariables.set(accessKey, json.accessToken);",
+          "    pm.environment.set(accessKey, json.accessToken);",
+          "  }",
+          "  if (json.refreshToken) {",
+          "    pm.collectionVariables.set(refreshKey, json.refreshToken);",
+          "    pm.environment.set(refreshKey, json.refreshToken);",
+          "  }",
+          "  console.log('Token refreshed. Re-send the previous request once.');",
           "});"
         ]
       }
@@ -25,6 +82,8 @@
     { "key": "baseUrl", "value": "http://localhost:8090" },
     { "key": "accessTokenA", "value": "" },
     { "key": "accessTokenB", "value": "" },
+    { "key": "refreshTokenA", "value": "" },
+    { "key": "refreshTokenB", "value": "" },
     { "key": "userIdA", "value": "" },
     { "key": "userIdB", "value": "" },
     { "key": "chatId", "value": "room1" }
@@ -49,9 +108,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Signup User A status is 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
                   "const json = pm.response.json();",
-                  "pm.collectionVariables.set('accessTokenA', json.accessToken || '');",
-                  "pm.collectionVariables.set('userIdA', String(json.userId || ''));"
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessTokenA', json.accessToken);",
+                  "  pm.environment.set('accessTokenA', json.accessToken);",
+                  "}",
+                  "if (json.refreshToken) {",
+                  "  pm.collectionVariables.set('refreshTokenA', json.refreshToken);",
+                  "  pm.environment.set('refreshTokenA', json.refreshToken);",
+                  "}",
+                  "if (json.userId) {",
+                  "  pm.collectionVariables.set('userIdA', String(json.userId));",
+                  "  pm.environment.set('userIdA', String(json.userId));",
+                  "}"
                 ]
               }
             }
@@ -76,9 +148,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Signup User B status is 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
                   "const json = pm.response.json();",
-                  "pm.collectionVariables.set('accessTokenB', json.accessToken || '');",
-                  "pm.collectionVariables.set('userIdB', String(json.userId || ''));"
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessTokenB', json.accessToken);",
+                  "  pm.environment.set('accessTokenB', json.accessToken);",
+                  "}",
+                  "if (json.refreshToken) {",
+                  "  pm.collectionVariables.set('refreshTokenB', json.refreshToken);",
+                  "  pm.environment.set('refreshTokenB', json.refreshToken);",
+                  "}",
+                  "if (json.userId) {",
+                  "  pm.collectionVariables.set('userIdB', String(json.userId));",
+                  "  pm.environment.set('userIdB', String(json.userId));",
+                  "}"
                 ]
               }
             }
@@ -103,9 +188,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Login User A status is 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
                   "const json = pm.response.json();",
-                  "pm.collectionVariables.set('accessTokenA', json.accessToken || '');",
-                  "pm.collectionVariables.set('userIdA', String(json.userId || ''));"
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessTokenA', json.accessToken);",
+                  "  pm.environment.set('accessTokenA', json.accessToken);",
+                  "}",
+                  "if (json.refreshToken) {",
+                  "  pm.collectionVariables.set('refreshTokenA', json.refreshToken);",
+                  "  pm.environment.set('refreshTokenA', json.refreshToken);",
+                  "}",
+                  "if (json.userId) {",
+                  "  pm.collectionVariables.set('userIdA', String(json.userId));",
+                  "  pm.environment.set('userIdA', String(json.userId));",
+                  "}"
                 ]
               }
             }
@@ -130,9 +228,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('Login User B status is 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
                   "const json = pm.response.json();",
-                  "pm.collectionVariables.set('accessTokenB', json.accessToken || '');",
-                  "pm.collectionVariables.set('userIdB', String(json.userId || ''));"
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessTokenB', json.accessToken);",
+                  "  pm.environment.set('accessTokenB', json.accessToken);",
+                  "}",
+                  "if (json.refreshToken) {",
+                  "  pm.collectionVariables.set('refreshTokenB', json.refreshToken);",
+                  "  pm.environment.set('refreshTokenB', json.refreshToken);",
+                  "}",
+                  "if (json.userId) {",
+                  "  pm.collectionVariables.set('userIdB', String(json.userId));",
+                  "  pm.environment.set('userIdB', String(json.userId));",
+                  "}"
                 ]
               }
             }

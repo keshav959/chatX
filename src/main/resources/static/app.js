@@ -8,7 +8,31 @@ const state = {
 
 const consoleEl = document.getElementById("console");
 const sessionLabel = document.getElementById("sessionLabel");
+const requestStatusEl = document.getElementById("requestStatus");
 const logoutBtn = document.getElementById("logoutBtn");
+const toastStackEl = document.getElementById("toastStack");
+
+function setRequestStatus(mode, text) {
+  if (!requestStatusEl) return;
+  requestStatusEl.className = `status-pill ${mode}`;
+  requestStatusEl.textContent = text;
+}
+
+function showToast(message, type = "info") {
+  if (!toastStackEl) return;
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toastStackEl.prepend(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(6px)";
+    toast.style.transition = "all 180ms ease";
+  }, 2200);
+
+  setTimeout(() => toast.remove(), 2450);
+}
 
 function log(title, payload) {
   const now = new Date().toLocaleTimeString();
@@ -69,6 +93,8 @@ async function api(path, options = {}) {
   const headers = Object.assign({}, options.headers || {});
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
 
+  setRequestStatus("loading", "Request in progress...");
+
   const response = await fetch(`${state.baseUrl}${path}`, {
     method: options.method || "GET",
     headers,
@@ -84,10 +110,13 @@ async function api(path, options = {}) {
   }
 
   if (!response.ok) {
+    setRequestStatus("error", `Failed (${response.status})`);
     log(`ERROR ${response.status} ${path}`, data);
+    showToast(data.message || `Request failed (${response.status})`, "error");
     throw new Error(data.message || `Request failed (${response.status})`);
   }
 
+  setRequestStatus("ok", `Success (${response.status})`);
   log(`OK ${response.status} ${path}`, data);
   return data;
 }
@@ -107,159 +136,161 @@ function renderList(containerId, items, formatter) {
   });
 }
 
-document.getElementById("signupBtn").addEventListener("click", async () => {
-  try {
-    const body = {
-      email: document.getElementById("signupEmail").value.trim(),
-      password: document.getElementById("signupPassword").value,
-      displayName: document.getElementById("signupName").value.trim()
-    };
-    const data = await api("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    setSession(data);
-  } catch (e) {
-    log("Signup failed", e.message);
-  }
+function bindAction(buttonId, handler) {
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    if (btn.disabled) return;
+    btn.classList.add("is-busy");
+    btn.disabled = true;
+    try {
+      await handler();
+      if (buttonId !== "loadFeedBtn" && buttonId !== "loadChatBtn") {
+        showToast("Done", "ok");
+      }
+    } catch (e) {
+      log("Action failed", e.message);
+    } finally {
+      btn.classList.remove("is-busy");
+      btn.disabled = false;
+      setTimeout(() => {
+        if (requestStatusEl?.classList.contains("ok")) {
+          setRequestStatus("idle", "Idle");
+        }
+      }, 1300);
+    }
+  });
+}
+
+function prefillUser(email, displayName) {
+  document.getElementById("signupEmail").value = email;
+  document.getElementById("signupName").value = displayName;
+  document.getElementById("loginEmail").value = email;
+  document.getElementById("signupPassword").value = "password123";
+  document.getElementById("loginPassword").value = "password123";
+  showToast(`Prefilled ${displayName}`, "info");
+}
+
+bindAction("signupBtn", async () => {
+  const body = {
+    email: document.getElementById("signupEmail").value.trim(),
+    password: document.getElementById("signupPassword").value,
+    displayName: document.getElementById("signupName").value.trim()
+  };
+  const data = await api("/api/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  setSession(data);
 });
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  try {
-    const body = {
-      email: document.getElementById("loginEmail").value.trim(),
-      password: document.getElementById("loginPassword").value
-    };
-    const data = await api("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    setSession(data);
-  } catch (e) {
-    log("Login failed", e.message);
-  }
+bindAction("loginBtn", async () => {
+  const body = {
+    email: document.getElementById("loginEmail").value.trim(),
+    password: document.getElementById("loginPassword").value
+  };
+  const data = await api("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  setSession(data);
 });
 
 logoutBtn.addEventListener("click", () => {
   clearSession();
   log("Session", "Logged out");
+  showToast("Logged out", "info");
+  setRequestStatus("idle", "Idle");
 });
 
-document.getElementById("getProfileBtn").addEventListener("click", async () => {
+bindAction("getProfileBtn", async () => {
   const userId = document.getElementById("profileUserId").value;
-  if (!userId) return;
-  try {
-    await api(`/api/users/${userId}`);
-  } catch (e) {
-    log("Get profile failed", e.message);
-  }
+  if (!userId) throw new Error("Provide user id");
+  await api(`/api/users/${userId}`);
 });
 
-document.getElementById("updateProfileBtn").addEventListener("click", async () => {
-  if (!state.userId) return log("Missing session", "Login first");
-  try {
-    const body = {
-      displayName: document.getElementById("updateName").value.trim(),
-      bio: document.getElementById("updateBio").value.trim()
-    };
-    const data = await api(`/api/users/${state.userId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    state.displayName = data.displayName || state.displayName;
-    localStorage.setItem("chatx.displayName", state.displayName);
-    renderSession();
-  } catch (e) {
-    log("Update profile failed", e.message);
-  }
+bindAction("updateProfileBtn", async () => {
+  if (!state.userId) throw new Error("Login first");
+  const body = {
+    displayName: document.getElementById("updateName").value.trim(),
+    bio: document.getElementById("updateBio").value.trim()
+  };
+  const data = await api(`/api/users/${state.userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  state.displayName = data.displayName || state.displayName;
+  localStorage.setItem("chatx.displayName", state.displayName);
+  renderSession();
 });
 
-document.getElementById("followBtn").addEventListener("click", async () => {
+bindAction("followBtn", async () => {
   const targetId = document.getElementById("targetUserId").value;
-  if (!targetId) return;
-  try {
-    await api(`/api/users/${targetId}/follow`, { method: "POST" });
-  } catch (e) {
-    log("Follow failed", e.message);
-  }
+  if (!targetId) throw new Error("Provide target user id");
+  await api(`/api/users/${targetId}/follow`, { method: "POST" });
 });
 
-document.getElementById("unfollowBtn").addEventListener("click", async () => {
+bindAction("unfollowBtn", async () => {
   const targetId = document.getElementById("targetUserId").value;
-  if (!targetId) return;
-  try {
-    await api(`/api/users/${targetId}/follow`, { method: "DELETE" });
-  } catch (e) {
-    log("Unfollow failed", e.message);
-  }
+  if (!targetId) throw new Error("Provide target user id");
+  await api(`/api/users/${targetId}/follow`, { method: "DELETE" });
 });
 
-document.getElementById("socialStatsBtn").addEventListener("click", async () => {
+bindAction("socialStatsBtn", async () => {
   const targetId = document.getElementById("socialUserId").value;
-  if (!targetId) return;
-  try {
-    await api(`/api/users/${targetId}/social`);
-  } catch (e) {
-    log("Social stats failed", e.message);
-  }
+  if (!targetId) throw new Error("Provide user id");
+  await api(`/api/users/${targetId}/social`);
 });
 
-document.getElementById("createPostBtn").addEventListener("click", async () => {
+bindAction("createPostBtn", async () => {
   const content = document.getElementById("postContent").value.trim();
-  if (!content) return;
-  try {
-    await api("/api/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content })
-    });
-    document.getElementById("postContent").value = "";
-  } catch (e) {
-    log("Create post failed", e.message);
-  }
+  if (!content) throw new Error("Post content is empty");
+  await api("/api/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content })
+  });
+  document.getElementById("postContent").value = "";
 });
 
-document.getElementById("loadFeedBtn").addEventListener("click", async () => {
+bindAction("loadFeedBtn", async () => {
   const page = document.getElementById("feedPage").value || "0";
   const size = document.getElementById("feedSize").value || "20";
-  try {
-    const feed = await api(`/api/feed?page=${page}&size=${size}`);
-    renderList("feedList", feed, (p) => `#${p.id} ${p.authorDisplayName}: ${p.content}`);
-  } catch (e) {
-    log("Load feed failed", e.message);
-  }
+  const feed = await api(`/api/feed?page=${page}&size=${size}`);
+  renderList("feedList", feed, (p) => `#${p.id} ${p.authorDisplayName}: ${p.content}`);
 });
 
-document.getElementById("sendChatBtn").addEventListener("click", async () => {
+bindAction("sendChatBtn", async () => {
   const chatId = document.getElementById("chatId").value.trim();
   const content = document.getElementById("chatMessage").value.trim();
-  if (!chatId || !content) return;
-  try {
-    await api(`/api/chats/${chatId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content })
-    });
-    document.getElementById("chatMessage").value = "";
-  } catch (e) {
-    log("Send chat failed", e.message);
-  }
+  if (!chatId || !content) throw new Error("Enter chat id and message");
+  await api(`/api/chats/${chatId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content })
+  });
+  document.getElementById("chatMessage").value = "";
 });
 
-document.getElementById("loadChatBtn").addEventListener("click", async () => {
+bindAction("loadChatBtn", async () => {
   const chatId = document.getElementById("chatId").value.trim();
   const size = document.getElementById("chatSize").value || "20";
-  if (!chatId) return;
-  try {
-    const msgs = await api(`/api/chats/${chatId}/messages?size=${size}`);
-    renderList("chatList", msgs, (m) => `${m.senderId}: ${m.content}`);
-  } catch (e) {
-    log("Load chat failed", e.message);
-  }
+  if (!chatId) throw new Error("Enter chat id");
+  const msgs = await api(`/api/chats/${chatId}/messages?size=${size}`);
+  renderList("chatList", msgs, (m) => `${m.senderId}: ${m.content}`);
+});
+
+document.getElementById("prefillUserABtn")?.addEventListener("click", () => prefillUser("a@test.com", "User A"));
+document.getElementById("prefillUserBBtn")?.addEventListener("click", () => prefillUser("b@test.com", "User B"));
+document.getElementById("clearConsoleBtn")?.addEventListener("click", () => {
+  consoleEl.textContent = "";
+  showToast("Console cleared", "info");
 });
 
 renderSession();
-log("UI ready", "Use Auth section to start.");
+setRequestStatus("idle", "Idle");
+log("UI ready", "Use quick actions and auth section to start.");

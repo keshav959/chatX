@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles.css?v=2" />
 </head>
 <body>
   <div class="bg-orb orb-a"></div>
@@ -16,14 +16,22 @@
 
   <header class="topbar">
     <div>
-      <h1>ChatX Social</h1>
+      <div class="new-ui-badge">NEW UI</div>
+      <h1>ChatX Social v2</h1>
       <p>Profiles, feed, follows, and realtime-style chat APIs in one console.</p>
     </div>
     <div class="session-box">
       <div id="sessionLabel">No active session</div>
+      <div id="requestStatus" class="status-pill idle">Idle</div>
       <button id="logoutBtn" class="ghost" disabled>Logout</button>
     </div>
   </header>
+
+  <section class="quick-actions">
+    <button id="prefillUserABtn" class="ghost">Prefill User A</button>
+    <button id="prefillUserBBtn" class="ghost">Prefill User B</button>
+    <button id="clearConsoleBtn" class="ghost">Clear Console</button>
+  </section>
 
   <main class="layout">
     <section class="panel auth-panel">
@@ -117,6 +125,8 @@
     </section>
   </main>
 
-  <script src="/app.js"></script>
+  <div id="toastStack" class="toast-stack"></div>
+
+  <script src="/app.js?v=2"></script>
 </body>
 </html>
