@@ -2,6 +2,8 @@ package com.chatx.social.user;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 public class UserService {
@@ -16,6 +18,11 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return UserDto.from(user);
+    }
+
+    public Page<UserDto> list(int page, int size) {
+        return userRepository.findAll(PageRequest.of(page, Math.min(size, 100)))
+                .map(UserDto::from);
     }
 
     @Transactional
