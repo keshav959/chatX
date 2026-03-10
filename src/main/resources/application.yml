@@ -19,6 +19,15 @@ spring:
     mongodb:
       uri: ${MONGO_URI:mongodb://chatx:chatx@127.0.0.1:27017/chatx?authSource=admin}
 
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+          no-store: true
+          must-revalidate: true
+          max-age: 0
+
 server:
   port: 8080
 
